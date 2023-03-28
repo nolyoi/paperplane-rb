@@ -5,46 +5,48 @@ require 'paperplane/error'
 require 'paperplane/version'
 
 module Paperplane
-  class << self
-    BASE_URL = 'https://api.paperplane.app/v1'.freeze
-    ENDPOINTS = {
-      create_job: '/jobs',
-      show_job: '/jobs/%{id}',
-      download_pdf: 'https://download.paperplane.app/'
-    }.freeze
-    PAGE_SIZES = %w[A4 Letter Legal Tabloid].freeze
+  ENDPOINTS = {
+    create_job: 'https://api.paperplane.app/v1/jobs',
+    show_job: 'https://api.paperplane.app/v1/jobs/%{id}',
+    download_pdf: 'https://download.paperplane.app/'
+  }.freeze
+  PAGE_SIZES = %w[Letter Legal A3 A4 A5].freeze
 
+  class << self
     attr_accessor :api_key
 
-    def create_job(url, page_size = 'A4')
+    def configure
+      yield self
+    end
+
+    def create_job(url, page_size: 'A4')
       validate_page_size!(page_size)
-      perform_request(:post, :create_job, url, page_size:)
+      perform_request(:post, :create_job, url, page_size: page_size)
     end
 
     def show_job(id)
       perform_request(:get, :show_job, id)
     end
 
-    def download_pdf(url, page_size = 'A4')
+    def download_pdf(url, page_size: 'A4')
       validate_page_size!(page_size)
-      perform_request(:post, :download_pdf, url, page_size:)
+      "#{ENDPOINTS[:download_pdf]}#{url}?page_size=#{page_size}"
     end
 
     private
 
     def http_client
-      @http_client ||= HTTP.basic_auth(user: self.api_key, pass: '')
+      @http_client ||= HTTP.basic_auth(user: api_key, pass: '')
     end
 
-    def perform_request(method, endpoint_name, *args)
-      url = build_url(endpoint_name, args[0])
-      response = http_client.request(method, url, json: args[1])
+    def perform_request(method, endpoint_name, **args)
+      url = build_url(endpoint_name, **args)
+      response = http_client.request(method, url, json: args)
       validate_response!(response)
     end
 
-    def build_url(endpoint_name, id)
-      endpoint = ENDPOINTS[endpoint_name]
-      endpoint.include?('://') ? endpoint : "#{BASE_URL}#{format(endpoint, id:)}"
+    def build_url(endpoint_name, **args)
+      format(ENDPOINTS[endpoint_name], **args)
     end
 
     def validate_response!(response)
