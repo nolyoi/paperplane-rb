@@ -21,7 +21,7 @@ module Paperplane
 
     def create_job(url, page_size: 'A4')
       validate_page_size!(page_size)
-      perform_request(:post, :create_job, url, page_size: page_size)
+      perform_request(:post, :create_job, url: url, page_size: page_size)
     end
 
     def show_job(id)
@@ -30,7 +30,7 @@ module Paperplane
 
     def download_pdf(url, page_size: 'A4')
       validate_page_size!(page_size)
-      "#{ENDPOINTS[:download_pdf]}#{url}?page_size=#{page_size}"
+      perform_request(:post, :download_pdf, url: url, page_size: page_size)
     end
 
     private
