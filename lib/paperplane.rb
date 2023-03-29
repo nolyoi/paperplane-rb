@@ -54,7 +54,7 @@ module Paperplane
     end
 
     def validate_response!(response)
-      raise Paperplane::Error, response.parse['message'] if response.status >= 400
+      # raise Paperplane::Error, response.parse['message'] if response.status >= 400
       response.parse
     end
 
