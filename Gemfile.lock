@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    paperplane-rb (0.1.7)
+    paperplane-rb (0.1.8)
       http
 
 GEM
@@ -56,6 +56,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-22
+  x86_64-linux
 
 DEPENDENCIES
   http
