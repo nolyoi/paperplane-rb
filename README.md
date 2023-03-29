@@ -1,8 +1,6 @@
-# Paperplane
+# paperplane-rb
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/paperplane`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+A simple gem to interact with the Paperplane PDF API. It just has very basic features that I needed quickly. I'll continue to improve this as I need. Feel free to contribute if you'd like!
 
 ## Installation
 
@@ -10,20 +8,41 @@ Install the gem and add to the application's Gemfile by executing:
 
     $ bundle add paperplane
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Or add it to your `Gemfile` manually:
 
-    $ gem install paperplane
+```ruby
+gem 'paperplane'
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+Initialize the library and set your API key(required) and logger(optional).
+```ruby
+    require 'paperplane'
 
-## Development
+    Paperplane.configure do |config|
+    config.api_key = 'your_paperplane_api_key'
+    config.logger = Appsignal::Logger.new("paperplane")
+    end
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+You can now call the different methods:
+```ruby
+    # Download PDF
+    url = 'https://en.wikipedia.org/wiki/Airplane'
+    output_file = 'example.pdf'
+    PaperplaneAPI.download_pdf(url, output_file)
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+    # Create Job
+    response = PaperplaneAPI.create_job(url)
+    puts response
+    job_id = response['id']
+
+    # Show Job
+    job = PaperplaneAPI.show_job(job_id)
+    puts job
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/paperplane.
+Bug reports and pull requests are welcome on GitHub at https://github.com/nolyoi/paperplane-rb.
