@@ -1,67 +1,62 @@
 # frozen_string_literal: true
 
 require 'http'
+require 'paperplane/config'
 require 'paperplane/error'
 require 'paperplane/version'
 
 module Paperplane
   ENDPOINTS = {
-    create_job: 'https://api.paperplane.app/v1/jobs',
-    show_job: 'https://api.paperplane.app/v1/jobs/%{id}',
-    download_pdf: 'https://download.paperplane.app/'
+    download_pdf: 'https://download.paperplane.app/',
+    jobs: 'https://api.paperplane.app/jobs'
   }.freeze
-  PAGE_SIZES = %w[Letter Legal A3 A4 A5].freeze
 
   class << self
-    attr_accessor :api_key
+    attr_writer :config
+
+    def config
+      @config ||= Config.new
+    end
 
     def configure
-      yield self
+      yield(config) if block_given?
     end
 
-    def create_job(url, page_size: 'A4')
-      validate_page_size!(page_size)
-      perform_request(:post, :create_job, url: url, page_size: page_size)
+    def client
+      @client ||= HTTP.basic_auth(user: config.api_key, pass: '')
     end
 
-    def show_job(id)
-      perform_request(:get, :show_job, id)
+    def prepare_params(url, page_size: 'A4')
+      params = { url: url, page_size: page_size }
     end
 
+    # Download PDF
     def download_pdf(url, page_size: 'A4')
-      response = HTTP.basic_auth(user: self.api_key, pass: "").post(
-        "https://download.paperplane.app",
-        json: { url: url, page_size: page_size }
-      )
+      params = prepare_params(url, page_size: page_size)
+      response = client.post(ENDPOINTS[:download_pdf], form: params)
+      raise Paperplane::Error, "Failed to download PDF: #{response.status}" unless response.status.success?
+      
+      config.logger.info("Downloaded PDF: #{url}")
       response.body.to_s
     end
 
-    private
+    # Create Job
+    def create_job(url, page_size: 'A4', options: {})
+      params = prepare_params(url, page_size: page_size)
+      response = client.post(ENDPOINTS[:jobs], form: params.merge(options))
+      raise Paperplane::Error, "Failed to create job: #{response.status}" unless response.status.success?
 
-    def http_client
-      @http_client ||= HTTP.basic_auth(user: api_key, pass: '')
-    end
-
-    def perform_request(method, endpoint_name, *args)
-      url = build_url(endpoint_name, *args)
-      puts url
-      puts args
-      response = http_client.request(method, url.to_s, json: args.to_json)
-      puts response.parse
-      validate_response!(response)
-    end
-
-    def build_url(endpoint_name, *args)
-      format(ENDPOINTS[endpoint_name], args)
-    end
-
-    def validate_response!(response)
-      # raise Paperplane::Error, response.parse['message'] if response.status >= 400
+      config.logger.info("Created job for URL: #{url}")
       response.parse
     end
 
-    def validate_page_size!(page_size)
-      raise ArgumentError, "Invalid page size '#{page_size}'" unless PAGE_SIZES.include?(page_size)
+    # Show Job
+    def show_job(job_id)
+      response = client.get("#{ENDPOINTS[:jobs]}/#{job_id}")
+      raise Paperplane::Error, "Failed to show job: #{response.status}" unless response.status.success?
+
+      config.logger.info("Fetched job: #{job_id}")
+      response.parse
     end
   end
 end
