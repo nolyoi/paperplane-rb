@@ -29,8 +29,11 @@ module Paperplane
     end
 
     def download_pdf(url, page_size: 'A4')
-      validate_page_size!(page_size)
-      perform_request(:post, :download_pdf, url: url, page_size: page_size)
+      response = HTTP.basic_auth(user: self.api_key, pass: "").post(
+        "https://download.paperplane.app",
+        json: { url: url, page_size: page_size }
+      )
+      response.body.to_s
     end
 
     private
@@ -39,18 +42,17 @@ module Paperplane
       @http_client ||= HTTP.basic_auth(user: api_key, pass: '')
     end
 
-    def perform_request(method, endpoint_name, **args)
-      url = build_url(endpoint_name, **args)
-      if endpoint_name == :download_pdf
-        response = http_client.request(method, url, json: args, headers: { 'Content-Type' => 'application/pdf' })
-      else
-        response = http_client.request(method, url, json: args)
-      end
+    def perform_request(method, endpoint_name, *args)
+      url = build_url(endpoint_name, *args)
+      puts url
+      puts args
+      response = http_client.request(method, url.to_s, json: args.to_json)
+      puts response.parse
       validate_response!(response)
     end
 
-    def build_url(endpoint_name, **args)
-      format(ENDPOINTS[endpoint_name], **args)
+    def build_url(endpoint_name, *args)
+      format(ENDPOINTS[endpoint_name], args)
     end
 
     def validate_response!(response)
