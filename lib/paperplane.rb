@@ -41,7 +41,11 @@ module Paperplane
 
     def perform_request(method, endpoint_name, **args)
       url = build_url(endpoint_name, **args)
-      response = http_client.request(method, url, json: args)
+      if endpoint_name == :download_pdf
+        response = http_client.request(method, url, json: args, headers: { 'Content-Type' => 'application/pdf' })
+      else
+        response = http_client.request(method, url, json: args)
+      end
       validate_response!(response)
     end
 
