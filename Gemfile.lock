@@ -3,6 +3,7 @@ PATH
   specs:
     paperplane-rb (0.1.8)
       http
+      webmock
 
 GEM
   remote: https://rubygems.org/
@@ -59,11 +60,9 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  http
   paperplane-rb!
   rake (~> 13.0)
   rspec (~> 3.0)
-  webmock
 
 BUNDLED WITH
    2.3.26

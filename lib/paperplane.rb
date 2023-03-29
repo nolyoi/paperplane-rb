@@ -22,6 +22,10 @@ module Paperplane
       yield(config) if block_given?
     end
 
+    def version
+      @version ||= Paperplane::VERSION
+    end
+
     def client
       @client ||= HTTP.basic_auth(user: config.api_key, pass: '')
     end
