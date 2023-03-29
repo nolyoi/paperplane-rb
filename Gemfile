@@ -10,3 +10,7 @@ gem "rake", "~> 13.0"
 gem "rspec", "~> 3.0"
 
 gem 'http'
+
+group :test do
+  gem 'webmock'
+end
